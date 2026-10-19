@@ -1,0 +1,45 @@
+name: Update upstream versions
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+  packages: write
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Resolve latest upstream tags
+        id: versions
+        shell: bash
+        run: |
+          set -euo pipefail
+          termix="$(curl -fsSL https://api.github.com/repos/Termix-SSH/Termix/releases/latest | jq -r '.tag_name' | sed 's/^v//')"
+          guacd="$(curl -fsSL 'https://hub.docker.com/v2/repositories/guacamole/guacd/tags?page_size=100' | jq -r '.results[].name' | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -1)"
+          test -n "$termix" && test -n "$guacd"
+          echo "termix=$termix" >> "$GITHUB_OUTPUT"
+          echo "guacd=$guacd" >> "$GITHUB_OUTPUT"
+      - name: Update manifests and changelogs
+        env:
+          TERMIX: ${{ steps.versions.outputs.termix }}
+          GUACD: ${{ steps.versions.outputs.guacd }}
+        run: |
+          set -euo pipefail
+          sed -i -E "s#(FROM ghcr.io/termix-ssh/termix:).*#\1${TERMIX}#" termix/Dockerfile
+          sed -i -E "s#^(version: ).*#\1${TERMIX}#" termix/config.yaml
+          sed -i "1a\## ${TERMIX}\n\n- Updated upstream Termix to ${TERMIX}.\n" termix/CHANGELOG.md
+          sed -i -E "s#(FROM guacamole/guacd:).*#\1${GUACD}#" guacd/Dockerfile
+          sed -i -E "s#^(version: ).*#\1${GUACD}#" guacd/config.yaml
+          sed -i "1a\## ${GUACD}\n\n- Updated upstream guacd to ${GUACD}.\n" guacd/CHANGELOG.md
+      - name: Commit to main
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add termix guacd
+          git commit -m "chore: update upstream versions" || exit 0
+          git push origin HEAD:main
+  build:
+    needs: update
+    uses: ./.github/workflows/build.yaml
+    with: {}
+    secrets: inherit
