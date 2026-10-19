@@ -1,5 +1,5 @@
 name: guacd
-version: 1.6.0
+version: 1.6.0-1
 slug: guacd
 description: Apache Guacamole remote desktop proxy for Termix
 url: https://github.com/apache/guacamole-server
