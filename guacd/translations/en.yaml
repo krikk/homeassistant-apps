@@ -1,0 +1,4 @@
+configuration:
+  log_level:
+    name: Log level
+    description: "guacd logging level passed to the daemon: trace, debug, info, warning, or error."

@@ -1,0 +1,22 @@
+configuration:
+  ssl:
+    name: Enable SSL
+    description: Serve Termix over HTTPS using certificates from the SSL directory.
+  certfile:
+    name: Certificate file
+    description: Certificate filename in the Home Assistant SSL directory.
+  keyfile:
+    name: Private key file
+    description: Private key filename in the Home Assistant SSL directory.
+  log_level:
+    name: Log level
+    description: "Termix log verbosity: trace, debug, info, warn, or error."
+  guacd_host:
+    name: guacd host
+    description: Internal hostname of the companion guacd app.
+  guacd_port:
+    name: guacd port
+    description: Internal guacd TCP port.
+  env_vars:
+    name: Additional environment variables
+    description: Advanced Termix environment variables as name/value pairs.

@@ -1,0 +1,38 @@
+name: Termix
+version: 26.10.2
+slug: termix
+description: Self-hosted server management with SSH, file management and remote desktop
+url: https://github.com/Termix-SSH/Termix
+arch:
+  - amd64
+startup: application
+boot: auto
+init: false
+timeout: 20
+backup: hot
+ports:
+  8080/tcp: 8080
+ports_description:
+  8080/tcp: Termix web interface (change the host mapping in the Network UI)
+map:
+  - share:rw
+  - ssl:ro
+options:
+  ssl: false
+  certfile: fullchain.pem
+  keyfile: privkey.pem
+  log_level: info
+  guacd_host: 71919c26-guacd
+  guacd_port: 4822
+  env_vars: []
+schema:
+  ssl: bool
+  certfile: str
+  keyfile: str
+  log_level: list(trace|debug|info|warn|error)
+  guacd_host: str
+  guacd_port: port
+  env_vars:
+    - name: str
+      value: str
+image: ghcr.io/krikk/homeassistant-app-termix

@@ -1,0 +1,19 @@
+name: guacd
+version: 1.6.0
+slug: guacd
+description: Apache Guacamole remote desktop proxy for Termix
+url: https://github.com/apache/guacamole-server
+arch:
+  - amd64
+startup: application
+boot: auto
+init: false
+timeout: 20
+backup: hot
+map:
+  - share:rw
+options:
+  log_level: info
+schema:
+  log_level: list(trace|debug|info|warning|error)
+image: ghcr.io/krikk/homeassistant-app-guacd
