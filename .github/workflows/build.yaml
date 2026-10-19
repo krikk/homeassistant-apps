@@ -1,0 +1,47 @@
+name: Build and publish
+on:
+  workflow_call:
+  push:
+    branches: [main]
+    paths: ["termix/**", "guacd/**", ".github/workflows/build.yaml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+  packages: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        app: [termix, guacd]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Read app version
+        id: version
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="$(grep -E '^version:' "${{ matrix.app }}/config.yaml" | head -1 | sed -E 's/^version:[[:space:]]*//')"
+          test -n "$version"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/metadata-action@v5
+        id: meta
+        with:
+          images: ghcr.io/krikk/homeassistant-app-${{ matrix.app }}
+          tags: |
+            type=raw,value=${{ steps.version.outputs.version }}
+            type=raw,value=latest
+      - uses: docker/build-push-action@v6
+        with:
+          context: ./${{ matrix.app }}
+          platforms: linux/amd64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
