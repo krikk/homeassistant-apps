@@ -1,5 +1,5 @@
 name: Termix
-version: 26.10.2
+version: 26.10.2-1
 slug: termix
 description: Self-hosted server management with SSH, file management and remote desktop
 url: https://github.com/Termix-SSH/Termix
@@ -13,7 +13,7 @@ backup: hot
 ports:
   8080/tcp: 8080
 ports_description:
-  8080/tcp: Termix web interface (change the host mapping in the Network UI)
+  8080/tcp: Termix web interface (change the host port in the Network UI)
 map:
   - share:rw
   - ssl:ro
