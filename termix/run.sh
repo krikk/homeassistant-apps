@@ -44,6 +44,26 @@ while IFS= read -r entry; do
   fi
 done < <(jq -c '.env_vars // [] | .[]' "$OPTIONS")
 
+run_uid="${PUID:-1000}"
+run_gid="${PGID:-1000}"
+
+# Ownership: Home Assistant creates /data (and /share) as root, but the
+# upstream entrypoint drops privileges to PUID:PGID. Hand the writable
+# directories over to that user. Only entries with a wrong owner or group
+# are changed, so restarts stay fast even with many recordings.
+fix_owner() {
+  local dir="$1"
+  local changed
+  changed="$(find "$dir" \( ! -user "$run_uid" -o ! -group "$run_gid" \) \
+    -exec chown -h "$run_uid:$run_gid" {} + -print | wc -l)"
+  if [[ "$changed" -gt 0 ]]; then
+    echo "Fixed ownership of $changed entries in $dir (UID $run_uid, GID $run_gid)"
+  fi
+}
+fix_owner /data
+fix_owner /share/termix
+chmod u+rwx /data /share/termix
+
 # SSL: the upstream entrypoint drops privileges to PUID:PGID (default 1000),
 # and nginx cannot read the root-owned files in /ssl. Copy them to a runtime
 # directory owned by that user. Not stored in /data, so keys stay out of backups.
@@ -55,10 +75,7 @@ if [[ "$ssl" == "true" ]]; then
     exit 1
   fi
 
-  run_uid="${PUID:-1000}"
-  run_gid="${PGID:-1000}"
   ssl_dir=/run/termix-ssl
-
   rm -rf "$ssl_dir"
   mkdir -p "$ssl_dir"
   cp "$src_cert" "$ssl_dir/fullchain.pem"
