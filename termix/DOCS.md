@@ -16,6 +16,17 @@ Termix always listens on internal port `8080`. To use a different external
 port, change only the host-side mapping in the app's **Network** UI; keep the
 container port at `8080/tcp`.
 
+## SSL certificates
+
+Termix and its nginx run as an unprivileged user (`PUID`/`PGID`, default
+`1000`), while files in the Home Assistant `/ssl` folder are owned by root.
+On every start the app therefore copies the configured certificate and key to
+`/run/termix-ssl` and makes them readable for that user only. The copies are
+not stored in `/data`, so private keys are not included in app backups.
+
+After renewing a certificate (for example with the Let's Encrypt app), restart
+Termix to load the new files.
+
 ## Environment set by the app
 
 `DATA_DIR`, `PORT`, `LOG_LEVEL`, `ENABLE_SSL`, `SSL_CERT_PATH`, `SSL_KEY_PATH`,
