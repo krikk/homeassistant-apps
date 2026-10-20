@@ -1,5 +1,14 @@
 # Changelog
 
+## 26.10.2-2
+
+- Fixed SSL "Permission denied": Termix and nginx run as an unprivileged user
+  (PUID/PGID, default 1000) and could not read the root-owned files in `/ssl`.
+  Certificates are now copied on startup to `/run/termix-ssl` with matching
+  ownership. Keys are not written to `/data` and stay out of backups.
+- `PUID`/`PGID` overrides from `env_vars` are respected for certificate
+  ownership.
+
 ## 26.10.2-1
 
 - Fixed startup failure "rm: cannot remove '/app/data': Device or resource
