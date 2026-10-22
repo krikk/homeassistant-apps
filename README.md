@@ -10,8 +10,10 @@ internal **Apache Guacamole guacd** companion.
 2. Add `https://github.com/krikk/homeassistant-apps` and select **Add**.
 3. Install **Termix** and **guacd**. Start guacd before Termix.
 4. Configure the options shown by each app, then start the apps.
-5. Open Termix at `http://homeassistant.local:8080` (or the host and port you
-   selected in the Home Assistant network UI). Termix has no ingress or panel.
+5. Open Termix at `http://homeassistant.local:8080`. With SSL enabled, open
+   `https://homeassistant.local:8443` instead (port 8080 then redirects to it).
+   Use the host and ports you selected in the Home Assistant network UI.
+   Termix has no ingress or panel.
 
 The Termix app connects to guacd over the internal app network. The generated
 network names are based on the first eight hexadecimal characters of the
