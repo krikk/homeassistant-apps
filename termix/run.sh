@@ -4,15 +4,20 @@ set -Eeuo pipefail
 OPTIONS=/data/options.json
 json() { jq -r "${1} // empty" "$OPTIONS"; }
 
+# Container port published by Home Assistant for HTTPS (see config.yaml).
+PUBLISHED_SSL_PORT=8443
+
 log_level="$(json '.log_level')"; log_level="${log_level:-info}"
 guacd_host="$(json '.guacd_host')"; guacd_host="${guacd_host:-71919c26-guacd}"
 guacd_port="$(json '.guacd_port')"; guacd_port="${guacd_port:-4822}"
 ssl="$(json '.ssl')"; ssl="${ssl:-false}"
+ssl_port="$(json '.ssl_port')"; ssl_port="${ssl_port:-$PUBLISHED_SSL_PORT}"
 certfile="$(json '.certfile')"; certfile="${certfile:-fullchain.pem}"
 keyfile="$(json '.keyfile')"; keyfile="${keyfile:-privkey.pem}"
 
 export DATA_DIR=/data
 export PORT=8080
+export SSL_PORT="$ssl_port"
 export LOG_LEVEL="$log_level"
 export REMOTE_DESKTOP_ENGINE=guacd
 export GUACD_HOST="$guacd_host"
@@ -44,6 +49,8 @@ while IFS= read -r entry; do
   fi
 done < <(jq -c '.env_vars // [] | .[]' "$OPTIONS")
 
+# Re-read values that env_vars may have overridden.
+ssl_port="${SSL_PORT:-$PUBLISHED_SSL_PORT}"
 run_uid="${PUID:-1000}"
 run_gid="${PGID:-1000}"
 
@@ -75,6 +82,11 @@ if [[ "$ssl" == "true" ]]; then
     exit 1
   fi
 
+  if [[ "$ssl_port" == "8080" || "$ssl_port" == "$guacd_port" ]]; then
+    echo "ssl_port $ssl_port conflicts with another port in use" >&2
+    exit 1
+  fi
+
   ssl_dir=/run/termix-ssl
   rm -rf "$ssl_dir"
   mkdir -p "$ssl_dir"
@@ -88,7 +100,16 @@ if [[ "$ssl" == "true" ]]; then
   export SSL_CERT_PATH="$ssl_dir/fullchain.pem"
   export SSL_KEY_PATH="$ssl_dir/privkey.pem"
   echo "Using SSL certificate $src_cert and key $src_key (copied for UID $run_uid)"
+
+  # Home Assistant only publishes container port $PUBLISHED_SSL_PORT. If the
+  # user selected another external HTTPS port (so that the HTTP->HTTPS redirect
+  # points to it), nginx listens on that port and we forward the published
+  # port to it.
+  if [[ "$ssl_port" != "$PUBLISHED_SSL_PORT" ]]; then
+    echo "Forwarding published port $PUBLISHED_SSL_PORT to HTTPS port $ssl_port"
+    socat "TCP-LISTEN:${PUBLISHED_SSL_PORT},fork,reuseaddr" "TCP:127.0.0.1:${ssl_port}" &
+  fi
 fi
 
-echo "Starting Termix on port 8080 (SSL: $ssl, guacd: $guacd_host:$guacd_port)"
+echo "Starting Termix on port 8080 (SSL: $ssl, HTTPS port: $ssl_port, guacd: $guacd_host:$guacd_port)"
 exec docker-entrypoint.sh /entrypoint.sh
