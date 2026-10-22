@@ -1,5 +1,21 @@
 # Changelog
 
+## 26.10.2-4
+
+- Fixed HTTPS access: with SSL enabled, Termix serves HTTPS on a separate port
+  (8443) and port 8080 only redirects. Port `8443/tcp` is now published.
+- Added the `ssl_port` option (default 8443) so the HTTP to HTTPS redirect
+  points to the correct external port. If it differs from 8443, an internal
+  forwarder maps the published port to it.
+- Added `socat` to the image.
+
+## 26.10.2-3
+
+- Fixed startup failure "EACCES: permission denied, open '/data/.env'":
+  `/data` and `/share/termix` are now handed over to the user Termix runs as
+  (`PUID`/`PGID`, default 1000) on every start. Only entries with a wrong
+  owner are changed.
+
 ## 26.10.2-2
 
 - Fixed SSL "Permission denied": Termix and nginx run as an unprivileged user
