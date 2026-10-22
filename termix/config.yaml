@@ -1,5 +1,5 @@
 name: Termix
-version: 26.10.2-3
+version: 26.10.2-4
 slug: termix
 description: Self-hosted server management with SSH, file management and remote desktop
 url: https://github.com/Termix-SSH/Termix
@@ -12,13 +12,16 @@ timeout: 20
 backup: hot
 ports:
   8080/tcp: 8080
+  8443/tcp: 8443
 ports_description:
-  8080/tcp: Termix web interface (change the host port in the Network UI)
+  8080/tcp: Termix web interface (HTTP, redirects to HTTPS when SSL is enabled)
+  8443/tcp: Termix web interface (HTTPS, only used when SSL is enabled)
 map:
   - share:rw
   - ssl:ro
 options:
   ssl: false
+  ssl_port: 8443
   certfile: fullchain.pem
   keyfile: privkey.pem
   log_level: info
@@ -27,6 +30,7 @@ options:
   env_vars: []
 schema:
   ssl: bool
+  ssl_port: port
   certfile: str
   keyfile: str
   log_level: list(trace|debug|info|warn|error)
