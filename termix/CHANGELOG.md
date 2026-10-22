@@ -1,6 +1,6 @@
 # Changelog
 
-## 26.10.2-4
+## 26.10.4
 
 - Fixed HTTPS access: with SSL enabled, Termix serves HTTPS on a separate port
   (8443) and port 8080 only redirects. Port `8443/tcp` is now published.
@@ -8,6 +8,7 @@
   points to the correct external port. If it differs from 8443, an internal
   forwarder maps the published port to it.
 - Added `socat` to the image.
+- update Termix to 26.10.4
 
 ## 26.10.2-3
 
