@@ -2,6 +2,9 @@ configuration:
   ssl:
     name: Enable SSL
     description: Serve Termix over HTTPS using certificates from the SSL directory.
+  ssl_port:
+    name: HTTPS port
+    description: External HTTPS port used in the HTTP to HTTPS redirect. Keep 8443 unless you also changed the host port of 8443/tcp in the Network UI to the same value.
   certfile:
     name: Certificate file
     description: Certificate filename in the Home Assistant SSL directory.
