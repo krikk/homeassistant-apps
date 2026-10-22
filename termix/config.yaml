@@ -1,5 +1,5 @@
 name: Termix
-version: 26.10.2-4
+version: 26.10.4
 slug: termix
 description: Self-hosted server management with SSH, file management and remote desktop
 url: https://github.com/Termix-SSH/Termix
