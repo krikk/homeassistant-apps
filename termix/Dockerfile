@@ -1,4 +1,4 @@
-FROM ghcr.io/termix-ssh/termix:26.10.4
+FROM ghcr.io/termix-ssh/termix:26.10.5
 USER root
 RUN apt-get update && apt-get install -y --no-install-recommends jq socat && rm -rf /var/lib/apt/lists/*
 COPY run.sh /usr/local/bin/ha-termix-run

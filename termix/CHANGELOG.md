@@ -1,4 +1,8 @@
 # Changelog
+## 26.10.5
+
+- Updated upstream Termix to 26.10.5.
+
 
 ## 26.10.4
 
