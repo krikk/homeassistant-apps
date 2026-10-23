@@ -2,76 +2,86 @@
 
 ## Options
 
-- **SSL** enables HTTPS. Put `fullchain.pem` and `privkey.pem` in `/ssl`, or
-  choose different filenames. The SSL mapping is read-only. The app refuses to
-  start if SSL is enabled and the files are missing.
-- **HTTPS port** (`ssl_port`, default `8443`) is the external port used for
-  HTTPS and for the HTTP to HTTPS redirect. See "Ports" below.
+- **SSL** enables HTTPS. Put `fullchain.pem` and `privkey.pem` in `/ssl`,
+  or choose different filenames using `certfile` and `keyfile`.
+  The SSL mapping is read-only. The app refuses to start if SSL is enabled
+  and the configured files are missing or unreadable.
 - **Log level** accepts `trace`, `debug`, `info`, `warn`, or `error`.
 - **guacd host/port** default to `71919c26-guacd:4822`; start guacd first.
 - **Environment variables** are advanced `name`/`value` pairs passed to Termix.
-  They are applied last and can override any value set by the app.
+  They override the initial environment defaults, except for the reserved
+  variables described below.
 
 ## Ports
 
-| Container port | Purpose                                               |
-| -------------- | ----------------------------------------------------- |
-| `8080/tcp`     | HTTP. With SSL enabled it only redirects to HTTPS.    |
-| `8443/tcp`     | HTTPS. Only used when SSL is enabled.                 |
+| Container port | Purpose |
+| -------------- | ------- |
+| `8080/tcp` | HTTP. Only used when SSL is disabled. |
+| `8443/tcp` | HTTPS. Only used when SSL is enabled. |
 
-With SSL enabled, open `https://homeassistant:8443`. Plain
-`http://homeassistant:8080` redirects there. Without SSL, use
-`http://homeassistant:8080` and ignore port 8443.
+Configure external ports exclusively in the app's **Network** settings
+in Home Assistant.
 
-### Changing the external HTTPS port
+### Without SSL
 
-Termix builds the redirect URL from `ssl_port`, so the option must match the
-port you actually use from outside:
+By default, open:
 
-1. In the app's **Network** UI, change the host port of `8443/tcp` (for
-   example to `9443`). Never change the container port.
-2. Set the option **HTTPS port** to the same number (`9443`).
+`http://homeassistant:8080`
+
+To use another external HTTP port, change the host-side mapping of
+`8080/tcp`, for example to `9080`, and restart the app.
+
+Then open:
+
+`http://homeassistant:9080`
+
+HTTPS is not available in this mode.
+
+### With SSL
+
+By default, open:
+
+`https://homeassistant:8443`
+
+To use another external HTTPS port:
+
+1. Open the app's **Network** settings in Home Assistant.
+2. Change the host-side mapping of `8443/tcp`, for example to `9443`.
 3. Restart the app.
 
-If `ssl_port` differs from `8443`, the app starts a small internal forwarder
-from the published container port `8443` to nginx, which then listens on
-`ssl_port`. The values `8080` and the guacd port are rejected.
+Then open:
 
-To change the external HTTP port, change only the host-side mapping of
-`8080/tcp`; keep the container port at `8080/tcp`.
+`https://homeassistant:9443`
 
-## SSL certificates
+The internal HTTPS port remains `8443`. No internal forwarder is needed.
 
-Termix and its nginx run as an unprivileged user (`PUID`/`PGID`, default
-`1000`), while files in the Home Assistant `/ssl` folder are owned by root.
-On every start the app therefore copies the configured certificate and key to
-`/run/termix-ssl` and makes them readable for that user only. The copies are
-not stored in `/data`, so private keys are not included in app backups.
+When SSL is enabled, the HTTP listener is disabled. There is no
+HTTP-to-HTTPS redirect. Always access the app directly using HTTPS.
 
-After renewing a certificate (for example with the Let's Encrypt app), restart
-Termix to load the new files.
+Only the port mapping for the active protocol is needed. The other
+host-side port mapping may be disabled in Home Assistant.
 
-## Environment set by the app
+The previous `ssl_port` option has been removed. If it remains in an
+existing configuration, remove it. It is no longer used.
 
-`DATA_DIR`, `PORT`, `SSL_PORT`, `LOG_LEVEL`, `ENABLE_SSL`, `SSL_CERT_PATH`,
-`SSL_KEY_PATH`, `REMOTE_DESKTOP_ENGINE`, `GUACD_HOST`, `GUACD_PORT`,
-`GUACD_TUNNEL_HOST`, `GUACD_RECORDING_BACKEND_PATH`, and `RDP_DRIVE_PATH`.
+## Environment variables
 
-## Data and backups
+Custom environment variable names must use the following format:
 
-Termix data (SQLite database and keys) is stored in `/data` via
-`DATA_DIR=/data` and is therefore included in Home Assistant backups. Backups
-are hot, so Termix keeps running during a backup.
+`[a-zA-Z_][a-zA-Z0-9_]*`
 
-Home Assistant creates `/data` and `/share` as root, but Termix runs as
-`PUID`/`PGID` (default `1000`). On every start the app changes the owner of
-`/data` and `/share/termix` to that user. Only entries with a wrong owner are
-touched, so restarts stay fast.
+Values are passed literally; shell expressions are not evaluated.
 
-The upstream image declares `/app/data` as a Docker volume. It is left in place
-and not used. If it contains data and `/data` is still empty, that data is
-copied to `/data` once on startup.
+### SSL override
 
-Recordings are stored in `/share/termix/session_recordings/guacamole` and the
-RDP drive in `/share/termix/rdp-drive`. These live in the Home Assistant share
-folder, not in the app backup.
+`ENABLE_SSL` may override the SSL option.
+
+Its value must be exactly `true` or `false`, written as a string in
+`env_vars`.
+
+Example:
+
+```yaml
+env_vars:
+  - name: ENABLE_SSL
+    value: "true"
