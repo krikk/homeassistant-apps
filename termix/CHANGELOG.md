@@ -1,5 +1,9 @@
 # Changelog
 
+## 26.10.6
+
+- Updated upstream termix to 26.10.6.
+
 ## 26.10.5-1
 
 - Removed socat and the internal HTTPS port forwarder.
