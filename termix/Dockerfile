@@ -1,4 +1,4 @@
-FROM ghcr.io/termix-ssh/termix:26.10.6
+FROM ghcr.io/termix-ssh/termix:26.11.0
 
 USER root
 

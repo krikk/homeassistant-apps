@@ -1,5 +1,9 @@
 # Changelog
 
+## 26.11.0
+
+- Updated upstream termix to 26.11.0.
+
 ## 26.10.6
 
 - Updated upstream termix to 26.10.6.
